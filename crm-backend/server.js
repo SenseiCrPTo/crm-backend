@@ -3,28 +3,38 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const path = require('path');
-const fs = require('fs'); // Добавили модуль для работы с файлами
+const fs = require('fs'); // Модуль для работы с файлами
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- Путь к папке Frontend ---
+// --- УЛУЧШЕННАЯ ОТЛАДКА ---
 const frontendPath = path.join(__dirname, 'Frontend');
 
-// --- ОТЛАДКА: Проверяем, существует ли папка ---
-console.log(`[DEBUG] Ожидаемый путь к Frontend: ${frontendPath}`);
-if (fs.existsSync(frontendPath)) {
-    console.log(`[DEBUG] Папка Frontend найдена!`);
-} else {
-    console.error(`[DEBUG] ВНИМАНИЕ: Папка Frontend НЕ НАЙДЕНА по пути: ${frontendPath}`);
+console.log(`[DEBUG] Текущая рабочая директория (__dirname): ${__dirname}`);
+console.log(`[DEBUG] Ожидаемый путь к папке Frontend: ${frontendPath}`);
+
+try {
+    const filesInCurrentDir = fs.readdirSync(__dirname);
+    console.log(`[DEBUG] Содержимое текущей директории:`, filesInCurrentDir);
+
+    if (fs.existsSync(frontendPath)) {
+        console.log(`[DEBUG] УСПЕХ: Папка Frontend найдена!`);
+        const filesInFrontend = fs.readdirSync(frontendPath);
+        console.log(`[DEBUG] Содержимое папки Frontend:`, filesInFrontend);
+    } else {
+        console.error(`[DEBUG] ОШИБКА: Папка Frontend НЕ НАЙДЕНА.`);
+    }
+} catch (e) {
+    console.error(`[DEBUG] Ошибка при чтении директории:`, e);
 }
 // --- КОНЕЦ ОТЛАДКИ ---
 
+// Обслуживание статических файлов из папки Frontend
 app.use(express.static(frontendPath));
-app.use('/api', require('./api')); // Предполагая, что вы вынесли роуты в отдельный файл
 
-// --- API МАРШРУТЫ (оставим пока здесь для простоты) ---
+// --- API МАРШРУТЫ ---
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
@@ -128,10 +138,12 @@ app.patch('/api/:resource/:id', async (req, res) => {
     }
 });
 
-// --- Обработчик для корневого маршрута ---
-app.get('/', (req, res) => {
+
+// Этот обработчик должен быть в конце, после всех API роутов
+app.get('*', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
