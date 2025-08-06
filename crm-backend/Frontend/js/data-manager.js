@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api'; // ИЗМЕНЕНИЕ ЗДЕСЬ
+const API_BASE_URL = '/api';
 
 export const data = {
     requests: [],
