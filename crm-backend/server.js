@@ -3,17 +3,28 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const path = require('path');
+const fs = require('fs'); // Добавили модуль для работы с файлами
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-// Путь теперь прямой, так как папка Frontend находится внутри crm-backend
-app.use(express.static(path.join(__dirname, 'Frontend')));
-// --- КОНЕЦ ИЗМЕНЕНИЯ ---
+// --- Путь к папке Frontend ---
+const frontendPath = path.join(__dirname, 'Frontend');
 
+// --- ОТЛАДКА: Проверяем, существует ли папка ---
+console.log(`[DEBUG] Ожидаемый путь к Frontend: ${frontendPath}`);
+if (fs.existsSync(frontendPath)) {
+    console.log(`[DEBUG] Папка Frontend найдена!`);
+} else {
+    console.error(`[DEBUG] ВНИМАНИЕ: Папка Frontend НЕ НАЙДЕНА по пути: ${frontendPath}`);
+}
+// --- КОНЕЦ ОТЛАДКИ ---
 
+app.use(express.static(frontendPath));
+app.use('/api', require('./api')); // Предполагая, что вы вынесли роуты в отдельный файл
+
+// --- API МАРШРУТЫ (оставим пока здесь для простоты) ---
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
@@ -30,9 +41,6 @@ const toCamelCase = (rows) => {
     });
 };
 
-// --- API МАРШРУТЫ ---
-
-// GET (Получить списки)
 app.get('/api/:resource', async (req, res) => {
     const { resource } = req.params;
     const validResources = ['departments', 'employees', 'clients', 'requests'];
@@ -45,7 +53,7 @@ app.get('/api/:resource', async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// POST (Создать)
+// ... (остальные ваши POST и PATCH роуты без изменений) ...
 app.post('/api/departments', async (req, res) => {
     try {
         const { name, parentId } = req.body;
@@ -78,8 +86,6 @@ app.post('/api/requests', async (req, res) => {
         res.status(201).json(toCamelCase(result.rows)[0]);
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
-
-// PATCH (Обновить)
 app.patch('/api/:resource/:id', async (req, res) => {
     const { resource, id } = req.params;
     const validResources = ['clients', 'employees', 'requests', 'departments'];
@@ -120,6 +126,11 @@ app.patch('/api/:resource/:id', async (req, res) => {
         console.error(`Ошибка при обновлении ${resource}:`, error);
         res.status(500).json({ error: error.message }); 
     }
+});
+
+// --- Обработчик для корневого маршрута ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3001;
