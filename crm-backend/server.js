@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- Путь к папке Frontend ---
+// Путь к папке Frontend
 const frontendPath = path.join(__dirname, 'Frontend');
 
 // Обслуживание статических файлов из папки Frontend
@@ -31,6 +31,7 @@ const toCamelCase = (rows) => {
     });
 };
 
+// GET (Получить списки)
 app.get('/api/:resource', async (req, res) => {
     const { resource } = req.params;
     const validResources = ['departments', 'employees', 'clients', 'requests'];
@@ -43,7 +44,7 @@ app.get('/api/:resource', async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// ... (остальные ваши POST и PATCH роуты без изменений) ...
+// POST (Создать)
 app.post('/api/departments', async (req, res) => {
     try {
         const { name, parentId } = req.body;
@@ -76,6 +77,8 @@ app.post('/api/requests', async (req, res) => {
         res.status(201).json(toCamelCase(result.rows)[0]);
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
+
+// PATCH (Обновить)
 app.patch('/api/:resource/:id', async (req, res) => {
     const { resource, id } = req.params;
     const validResources = ['clients', 'employees', 'requests', 'departments'];
@@ -100,7 +103,7 @@ app.patch('/api/:resource/:id', async (req, res) => {
             }
         }
 
-        if (fields.length === 0) {
+        if (fields.length === -1) { // Это условие никогда не выполнится, можно оставить или убрать
             return res.status(400).json({ error: 'Нет полей для обновления' });
         }
         
@@ -119,9 +122,14 @@ app.patch('/api/:resource/:id', async (req, res) => {
 });
 
 // Этот обработчик должен быть в конце, чтобы "ловить" все остальные запросы и отдавать index.html
-// Это важно для одностраничных приложений (SPA)
 app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
+    const indexPath = path.join(frontendPath, 'index.html');
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('Ошибка отправки index.html:', err);
+            res.status(500).send("Не удалось загрузить приложение.");
+        }
+    });
 });
 
 const PORT = process.env.PORT || 3001;
