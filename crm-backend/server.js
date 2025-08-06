@@ -1,4 +1,3 @@
-// FINAL VERSION CHECK: August 6, 2025
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -90,11 +89,11 @@ app.patch('/api/:resource/:id', async (req, res) => {
         const fields = [];
         const values = [];
         let queryCounter = 1;
-
+        
         for (const key in req.body) {
             const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
             fields.push(`${snakeKey} = $${queryCounter++}`);
-
+            
             if (['comments', 'tasks', 'attachments', 'activityLog'].includes(key)) {
                 values.push(JSON.stringify(req.body[key]));
             } else if (key === 'deadline' && req.body[key] === '') {
@@ -107,10 +106,10 @@ app.patch('/api/:resource/:id', async (req, res) => {
         if (fields.length === 0) {
             return res.status(400).json({ error: 'Нет полей для обновления' });
         }
-
+        
         values.push(id);
         const query = `UPDATE ${resource} SET ${fields.join(', ')} WHERE id = $${queryCounter} RETURNING *`;
-
+        
         const result = await pool.query(query, values);
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Запись не найдена' });
