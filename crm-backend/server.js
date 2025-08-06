@@ -3,33 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const path = require('path');
-const fs = require('fs'); // Модуль для работы с файлами
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- УЛУЧШЕННАЯ ОТЛАДКА ---
+// --- Путь к папке Frontend ---
 const frontendPath = path.join(__dirname, 'Frontend');
-
-console.log(`[DEBUG] Текущая рабочая директория (__dirname): ${__dirname}`);
-console.log(`[DEBUG] Ожидаемый путь к папке Frontend: ${frontendPath}`);
-
-try {
-    const filesInCurrentDir = fs.readdirSync(__dirname);
-    console.log(`[DEBUG] Содержимое текущей директории:`, filesInCurrentDir);
-
-    if (fs.existsSync(frontendPath)) {
-        console.log(`[DEBUG] УСПЕХ: Папка Frontend найдена!`);
-        const filesInFrontend = fs.readdirSync(frontendPath);
-        console.log(`[DEBUG] Содержимое папки Frontend:`, filesInFrontend);
-    } else {
-        console.error(`[DEBUG] ОШИБКА: Папка Frontend НЕ НАЙДЕНА.`);
-    }
-} catch (e) {
-    console.error(`[DEBUG] Ошибка при чтении директории:`, e);
-}
-// --- КОНЕЦ ОТЛАДКИ ---
 
 // Обслуживание статических файлов из папки Frontend
 app.use(express.static(frontendPath));
@@ -138,12 +118,11 @@ app.patch('/api/:resource/:id', async (req, res) => {
     }
 });
 
-
-// Этот обработчик должен быть в конце, после всех API роутов
+// Этот обработчик должен быть в конце, чтобы "ловить" все остальные запросы и отдавать index.html
+// Это важно для одностраничных приложений (SPA)
 app.get('*', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
-
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
