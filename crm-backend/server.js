@@ -8,10 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
-// Указываем Express, что нужно выйти на один уровень вверх ('..') чтобы найти папку 'Frontend'
-app.use(express.static(path.join(__dirname, '..', 'Frontend')));
-// --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+// --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+// Путь теперь прямой, так как папка Frontend находится внутри crm-backend
+app.use(express.static(path.join(__dirname, 'Frontend')));
+// --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
 
 const pool = new Pool({
