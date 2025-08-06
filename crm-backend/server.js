@@ -2,16 +2,16 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-const path = require('path'); // Добавлен модуль path
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- НОВЫЙ КОД ---
-// Указываем Express, что все файлы из папки 'Frontend' нужно отдавать как есть
-app.use(express.static(path.join(__dirname, 'Frontend')));
-// --- КОНЕЦ НОВОГО КОДА ---
+// --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+// Указываем Express, что нужно выйти на один уровень вверх ('..') чтобы найти папку 'Frontend'
+app.use(express.static(path.join(__dirname, '..', 'Frontend')));
+// --- КОНЕЦ ИСПРАВЛЕНИЯ ---
 
 
 const pool = new Pool({
